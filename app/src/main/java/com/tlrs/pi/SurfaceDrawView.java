@@ -4,10 +4,9 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
-import java.sql.Time;
 
 class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -69,6 +68,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
         private boolean isReady = false;
         private long prevTime = 0;
         private static final int frameRate = 2;
+        private boolean firstLoop = true;
 
         public DrawThread(SurfaceHolder surfaceHolder) {
             this.surfaceHolder = surfaceHolder;
@@ -79,30 +79,14 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
             this.isRunning = isRunning;
         }
 
+        private int loop = 0;
+
         @Override
         public void run() {
+
             Canvas canvas;
             while (!isReady) {
                     while (isRunning) {
-                        // Ограничение фреймрейта
-                        long now = System.currentTimeMillis();
-                        if ((now - prevTime) > (long)(1000/frameRate)){
-                            prevTime = now;
-                        }
-                        canvas = null;
-                        try {
-                            canvas = surfaceHolder.lockCanvas(null);
-                            if (canvas == null)
-                                continue;
-
-                            onDraw(canvas);
-                            isRunning = false;
-                            FullscreenActivity.AUTO_HIDE = false;
-                        } finally {
-                            if (canvas != null) {
-                                surfaceHolder.unlockCanvasAndPost(canvas);
-                            }
-                        }
                         synchronized (surfaceHolder) {
                             if (!isRunning) {
                                 try {
@@ -111,13 +95,41 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                                     e.printStackTrace();
                                 }
                             }
+                            // Ограничение фреймрейта
+                            long now = System.currentTimeMillis();
+                            if ((now - prevTime) > (1000 / frameRate)) {
+                                prevTime = now;
+                                canvas = null;
+                                try {
+                                    canvas = surfaceHolder.lockCanvas(null);
+                                    if (canvas == null)
+                                        continue;
+                                    // Отрисовка
+                                    canvas.drawColor(Color.WHITE);
+                                    onDraw(canvas);
+                                    if (firstLoop){ firstLoop = false; isRunning = false; }
+                                    if (loop >= 5) {
+                                        isRunning = false;
+                                        isReady = true;
+                                    } else {
+                                        loop++;
+                                    }
+                                } finally {
+                                    if (canvas != null) {
+                                        surfaceHolder.unlockCanvasAndPost(canvas);
+                                    }
+                                }
+                            }
                     }
                 }
             }
+            Log.d("Thread", "isFinished");
+            FullscreenActivity.AUTO_HIDE = false;
+            FullscreenActivity.handler.sendEmptyMessage(0);
         }
 
         void onDraw(Canvas canvas) {
-            canvas.drawColor(Color.GREEN);
+            //canvas.drawColor(Color.GREEN);
         }
 
         public void onResume(){

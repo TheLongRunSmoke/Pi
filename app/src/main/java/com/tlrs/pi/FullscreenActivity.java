@@ -3,6 +3,7 @@ package com.tlrs.pi;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +11,9 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import com.tlrs.pi.util.SystemUiHider;
+
+import java.lang.ref.WeakReference;
+import java.util.Objects;
 
 public class FullscreenActivity extends Activity {
 
@@ -22,6 +26,8 @@ public class FullscreenActivity extends Activity {
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
 
     private SystemUiHider mSystemUiHider;
+
+    static Handler handler; // Да, вот просто так.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +71,17 @@ public class FullscreenActivity extends Activity {
                 } else {
                     mSystemUiHider.show();
                 }
+            }
+        });
+
+        handler = new Handler(new Handler.Callback(){
+            //  Сделаю слабую ссылку для вьюшки. Не очень надо, но пусть будет.
+            private WeakReference<View> wControlView = new WeakReference<>(findViewById(R.id.fullscreen_content_controls));
+
+            @Override
+            public boolean handleMessage(Message msg){
+                wControlView.get().setVisibility(View.VISIBLE);
+                return true;
             }
         });
 
