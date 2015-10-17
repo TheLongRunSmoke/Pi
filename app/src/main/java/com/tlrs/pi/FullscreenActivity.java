@@ -1,14 +1,13 @@
 package com.tlrs.pi;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.MotionEvent;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewParent;
+import android.view.ViewGroup;
 
 import com.tlrs.pi.util.SystemUiHider;
 
@@ -41,7 +40,7 @@ public class FullscreenActivity extends Activity {
 
                     @Override
                     public void onVisibilityChange(boolean visible) {
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                        controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
                         if (visible && AUTO_HIDE) { // Избыточность проверки для совместимости с автоскрытием.
                             // Добавляю задержку скрытия
                             delayedHide(AUTO_HIDE_DELAY_MILLIS);
@@ -49,11 +48,19 @@ public class FullscreenActivity extends Activity {
                     }
                 });
 
+        // Фикс бага с размерами SurfaceView. Высота была меньше нужной на высоту статусбара, оверлей не подходит.
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        ViewGroup.LayoutParams lp = surfaceView.getLayoutParams();
+        lp.width = dm.widthPixels;
+        lp.height = dm.heightPixels;
+        surfaceView.setLayoutParams(lp);
+
         // Показ и скрытие UI по клику.
         surfaceView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
+                if (TOGGLE_ON_CLICK && AUTO_HIDE) {
                     mSystemUiHider.toggle();
                 } else {
                     mSystemUiHider.show();
@@ -69,7 +76,6 @@ public class FullscreenActivity extends Activity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
     }
-
 
     /**
      *  TouchListener обеспечивающий скрытие UI.

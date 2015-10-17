@@ -4,11 +4,10 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import static java.lang.System.*;
+import java.sql.Time;
 
 class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -36,7 +35,6 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
-        drawThread.onResume();
     }
 
     @Override
@@ -66,23 +64,31 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
     class DrawThread extends Thread implements Runnable {
 
-        private boolean running = false;
+        private boolean isRunning = false;
         private final SurfaceHolder surfaceHolder;
         private boolean isReady = false;
+        private long prevTime = 0;
+        private static final int frameRate = 2;
 
         public DrawThread(SurfaceHolder surfaceHolder) {
             this.surfaceHolder = surfaceHolder;
+            prevTime = System.currentTimeMillis();
         }
 
-        public void setRunning(boolean running) {
-            this.running = running;
+        public void setRunning(boolean isRunning) {
+            this.isRunning = isRunning;
         }
 
         @Override
         public void run() {
             Canvas canvas;
             while (!isReady) {
-                    while (running) {
+                    while (isRunning) {
+                        // Ограничение фреймрейта
+                        long now = System.currentTimeMillis();
+                        if ((now - prevTime) > (long)(1000/frameRate)){
+                            prevTime = now;
+                        }
                         canvas = null;
                         try {
                             canvas = surfaceHolder.lockCanvas(null);
@@ -90,7 +96,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                                 continue;
 
                             onDraw(canvas);
-                            running = false;
+                            isRunning = false;
                             FullscreenActivity.AUTO_HIDE = false;
                         } finally {
                             if (canvas != null) {
@@ -98,7 +104,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                             }
                         }
                         synchronized (surfaceHolder) {
-                            if (!running) {
+                            if (!isRunning) {
                                 try {
                                     surfaceHolder.wait();
                                 } catch (InterruptedException e) {
@@ -116,7 +122,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
         public void onResume(){
             synchronized (surfaceHolder) {
-                this.running = true;
+                this.isRunning = true;
                 surfaceHolder.notifyAll();
             }
         }
