@@ -29,6 +29,8 @@ public class FullscreenActivity extends Activity {
 
     static Handler handler; // Да, вот просто так.
 
+    private static boolean doNotShowUI = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,7 +68,7 @@ public class FullscreenActivity extends Activity {
         surfaceView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (TOGGLE_ON_CLICK && AUTO_HIDE) {
+                if (TOGGLE_ON_CLICK && AUTO_HIDE && !doNotShowUI) {
                     mSystemUiHider.toggle();
                 } else {
                     mSystemUiHider.show();
@@ -101,6 +103,7 @@ public class FullscreenActivity extends Activity {
         @Override
         public void onClick(View view) {
             AUTO_HIDE = true;
+            doNotShowUI = true;
             SurfaceDrawView.resume();
             // После взаимодействия, быстро скрываю интерфейс.
             delayedHide(100);

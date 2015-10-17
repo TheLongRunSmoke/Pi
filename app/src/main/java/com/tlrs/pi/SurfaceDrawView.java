@@ -83,8 +83,8 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
         @Override
         public void run() {
-
             Canvas canvas;
+            DrawPi draw = new DrawPi();
             while (!isReady) {
                     while (isRunning) {
                         synchronized (surfaceHolder) {
@@ -105,14 +105,13 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                                     if (canvas == null)
                                         continue;
                                     // Отрисовка
-                                    canvas.drawColor(Color.WHITE);
-                                    onDraw(canvas);
-                                    if (firstLoop){ firstLoop = false; isRunning = false; }
-                                    if (loop >= 5) {
+                                    if (firstLoop){
+                                        // Инициализация при запуске приложения
+                                        draw.init(canvas);
+                                        firstLoop = false;
                                         isRunning = false;
-                                        isReady = true;
-                                    } else {
-                                        loop++;
+                                    }else{
+                                        draw.nextFrame(canvas);
                                     }
                                 } finally {
                                     if (canvas != null) {
@@ -126,10 +125,6 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
             Log.d("Thread", "isFinished");
             FullscreenActivity.AUTO_HIDE = false;
             FullscreenActivity.handler.sendEmptyMessage(0);
-        }
-
-        void onDraw(Canvas canvas) {
-            //canvas.drawColor(Color.GREEN);
         }
 
         public void onResume(){
