@@ -11,23 +11,25 @@ import android.view.SurfaceView;
 class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
     private static DrawThread drawThread;
+    private Context context;
 
     public SurfaceDrawView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public SurfaceDrawView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public SurfaceDrawView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
-    void init(){
+    void init(Context context){
+        this.context = context;
         getHolder().addCallback(this);
     }
 
@@ -68,7 +70,6 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
         private boolean isReady = false;
         private long prevTime = 0;
         private static final int frameRate = 2;
-        private boolean firstLoop = true;
 
         public DrawThread(SurfaceHolder surfaceHolder) {
             this.surfaceHolder = surfaceHolder;
@@ -79,12 +80,11 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
             this.isRunning = isRunning;
         }
 
-        private int loop = 0;
-
         @Override
         public void run() {
             Canvas canvas;
-            DrawPi draw = new DrawPi();
+            DrawPi draw = new DrawPi(context);
+            boolean firstLoop = true;
             while (!isReady) {
                     while (isRunning) {
                         synchronized (surfaceHolder) {
@@ -107,10 +107,11 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                                     // Отрисовка
                                     if (firstLoop){
                                         // Инициализация при запуске приложения
-                                        draw.init(canvas);
+                                        draw.firstFrame(canvas);
                                         firstLoop = false;
                                         isRunning = false;
                                     }else{
+                                        // Рисую следующий кадр
                                         draw.nextFrame(canvas);
                                     }
                                 } finally {
@@ -122,7 +123,6 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                 }
             }
-            Log.d("Thread", "isFinished");
             FullscreenActivity.AUTO_HIDE = false;
             FullscreenActivity.handler.sendEmptyMessage(0);
         }

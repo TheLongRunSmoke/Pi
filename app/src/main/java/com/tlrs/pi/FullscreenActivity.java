@@ -29,7 +29,7 @@ public class FullscreenActivity extends Activity {
 
     static Handler handler; // Да, вот просто так.
 
-    private static boolean doNotShowUI = false;
+    public static boolean doNotShowUI = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +45,6 @@ public class FullscreenActivity extends Activity {
         mSystemUiHider.setup();
         mSystemUiHider
                 .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-
                     @Override
                     public void onVisibilityChange(boolean visible) {
                         controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -68,11 +67,11 @@ public class FullscreenActivity extends Activity {
         surfaceView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (TOGGLE_ON_CLICK && AUTO_HIDE && !doNotShowUI) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
-                }
+                    if (TOGGLE_ON_CLICK && AUTO_HIDE) {
+                        mSystemUiHider.toggle();
+                    } else {
+                        mSystemUiHider.show();
+                    }
             }
         });
 
