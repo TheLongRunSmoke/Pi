@@ -2,9 +2,9 @@ package com.tlrs.pi;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -12,6 +12,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
 
     private static DrawThread drawThread;
     private Context context;
+    static Handler handler;
 
     public SurfaceDrawView(Context context) {
         super(context);
@@ -31,6 +32,21 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
     void init(Context context){
         this.context = context;
         getHolder().addCallback(this);
+
+        handler = new Handler(new Handler.Callback(){
+            @Override
+            public boolean handleMessage(Message msg) {
+                if (drawThread.isAlive()){
+                    resume();
+                }else{
+                    drawThread = new DrawThread(getHolder());
+                    drawThread.setRunning(true);
+                    drawThread.skipFirstLoop(true);
+                    drawThread.start();
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -60,7 +76,9 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public static void resume(){
-        drawThread.onResume();
+        if (drawThread.isAlive()){
+            drawThread.onResume();
+        }
     }
 
     class DrawThread extends Thread implements Runnable {
@@ -68,6 +86,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
         private boolean isRunning = false;
         private final SurfaceHolder surfaceHolder;
         private boolean isReady = false;
+        private boolean firstLoop = true;
         private long prevTime = 0;
         private static final int frameRate = 2;
 
@@ -80,11 +99,14 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
             this.isRunning = isRunning;
         }
 
+        public void skipFirstLoop(boolean isNotSkip){
+            this.firstLoop = !isNotSkip;
+        }
+
         @Override
         public void run() {
             Canvas canvas;
             DrawPi draw = new DrawPi(context);
-            boolean firstLoop = true;
             while (!isReady) {
                     while (isRunning) {
                         synchronized (surfaceHolder) {
@@ -112,7 +134,8 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                                         isRunning = false;
                                     }else{
                                         // Рисую следующий кадр
-                                        draw.nextFrame(canvas);
+                                        isReady = draw.nextFrame(canvas);
+                                        if (isReady){isRunning = false;}
                                     }
                                 } finally {
                                     if (canvas != null) {

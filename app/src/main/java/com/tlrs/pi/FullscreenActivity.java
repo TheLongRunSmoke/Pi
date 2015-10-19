@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -13,15 +12,12 @@ import android.view.ViewGroup;
 import com.tlrs.pi.util.SystemUiHider;
 
 import java.lang.ref.WeakReference;
-import java.util.Objects;
 
 public class FullscreenActivity extends Activity {
 
     public static boolean AUTO_HIDE = false;
 
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
-
-    private static final boolean TOGGLE_ON_CLICK = true;
 
     private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
 
@@ -47,10 +43,14 @@ public class FullscreenActivity extends Activity {
                 .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
                     @Override
                     public void onVisibilityChange(boolean visible) {
-                        controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        if (visible && AUTO_HIDE) { // Избыточность проверки для совместимости с автоскрытием.
-                            // Добавляю задержку скрытия
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
+                        if (!doNotShowUI) {
+                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                            if (visible && AUTO_HIDE) { // Избыточность проверки для совместимости с автоскрытием.
+                                // Добавляю задержку скрытия
+                                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+                            }
+                        }else{
+                            controlsView.setVisibility(View.GONE);  // Делаю так для читабельности кода
                         }
                     }
                 });
@@ -67,7 +67,7 @@ public class FullscreenActivity extends Activity {
         surfaceView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                    if (TOGGLE_ON_CLICK && AUTO_HIDE) {
+                    if (AUTO_HIDE) {
                         mSystemUiHider.toggle();
                     } else {
                         mSystemUiHider.show();
@@ -75,6 +75,7 @@ public class FullscreenActivity extends Activity {
             }
         });
 
+        // Хэндлер для связи с DrawThread.
         handler = new Handler(new Handler.Callback(){
             //  Сделаю слабую ссылку для вьюшки. Не очень надо, но пусть будет.
             private WeakReference<View> wControlView = new WeakReference<>(findViewById(R.id.fullscreen_content_controls));
@@ -82,11 +83,12 @@ public class FullscreenActivity extends Activity {
             @Override
             public boolean handleMessage(Message msg){
                 wControlView.get().setVisibility(View.VISIBLE);
+                doNotShowUI = false;
                 return true;
             }
         });
 
-        // TouchListener для скрытия UI. Будет определён дальше.
+        // TouchListener для взаимодействия с UI. Будет определён дальше.
         findViewById(R.id.dummy_button).setOnClickListener(mDelayHideClickListener);
     }
 
@@ -96,14 +98,14 @@ public class FullscreenActivity extends Activity {
     }
 
     /**
-     *  TouchListener обеспечивающий скрытие UI.
+     *  TouchListener обеспечивающий взаимодействие UI.
      */
     OnClickListener mDelayHideClickListener = new OnClickListener() {
         @Override
         public void onClick(View view) {
             AUTO_HIDE = true;
             doNotShowUI = true;
-            SurfaceDrawView.resume();
+            SurfaceDrawView.handler.sendEmptyMessage(0);
             // После взаимодействия, быстро скрываю интерфейс.
             delayedHide(100);
         }

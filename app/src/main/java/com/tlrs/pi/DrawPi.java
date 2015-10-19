@@ -4,18 +4,16 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
 /**
  * Created by thelongrunsmoke.
- * Класс для вычисляет число Пи и визуализирует процесс.
+ * Класс для вычисления числа Пи и визуализации процесса.
  */
 public class DrawPi {
 
-    public int[] dots = new int[100];
+    //public int[] dots = new int[100];
     public int[] sizes = new int[2];
     public Context context;
     public Paint p;
@@ -37,11 +35,14 @@ public class DrawPi {
         canvas.drawLine(0,0,sizes[0],sizes[1],p);
     }
 
-    public void nextFrame(Canvas canvas){
+    public boolean nextFrame(Canvas canvas){
         canvas.drawColor(Color.WHITE);
-        p.setColor(ContextCompat.getColor(context, R.color.base_gray));
         p.setStrokeWidth(10);
+        p.setColor(Color.RED);
+        canvas.drawLine(0, 90, sizes[0], 90, p);
+        p.setColor(ContextCompat.getColor(context, R.color.base_gray));
         canvas.drawPoint(5, count, p);
         count += 3;
+        return count > 90;
     }
 }
