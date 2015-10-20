@@ -88,7 +88,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
         private boolean isReady = false;
         private boolean firstLoop = true;
         private long prevTime = 0;
-        private static final int frameRate = 2;
+        private static final int frameRate = 24;
 
         public DrawThread(SurfaceHolder surfaceHolder) {
             this.surfaceHolder = surfaceHolder;
