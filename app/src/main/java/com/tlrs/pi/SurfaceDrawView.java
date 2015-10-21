@@ -110,6 +110,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
             while (!isReady) {
                     while (isRunning) {
                         synchronized (surfaceHolder) {
+                            // Обеспечивает паузу процесса выполнения.
                             if (!isRunning) {
                                 try {
                                     surfaceHolder.wait();
@@ -146,6 +147,7 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                 }
             }
+            // Показать UI.
             FullscreenActivity.handler.sendEmptyMessage(0);
         }
 

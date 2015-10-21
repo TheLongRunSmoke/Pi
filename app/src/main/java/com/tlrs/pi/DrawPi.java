@@ -33,20 +33,20 @@ public class DrawPi {
 
     public DrawPi(Context context) {
         this.context = context;
-        random = new Random();
+        random = new Random();  // Инициализирую генератор случайных чисел.
         int[] sizes = new int[2];
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         sizes[0] = metrics.widthPixels;
         sizes[1] = metrics.heightPixels;
-        // Ширина кисти. Двухсотая часть ширины экрана
+        // Ширина кисти. Двухсотая часть ширины экрана.
         stroke = sizes[0]/200;
         // Размеры квадрата и отступ
         width = (int)(sizes[0] * 0.8);
         margin = (sizes[0] - width)/2;
         // Количество точек для репрезентативной выборки.
         // На самом деле точек будет в два раза меньше.
-        dotCount = Math.pow(width, 2)/2;
-        dotCount = (dotCount>=50000 ? dotCount : 50000);
+        // Если точек менее 25000, то увеличиваю значение до 25000.
+        dotCount = ((Math.pow(width, 2)/2)>=50000 ? dotCount : 50000);
         // Объект для построения квадрата
         rectangle = new RectF();
         rectangle.set(margin, margin, margin + width, margin + width);
@@ -76,11 +76,15 @@ public class DrawPi {
      * @return - возвратит true после заполнения массива точек.
      */
     public boolean nextFrame(Canvas canvas){
+        // Заливаю канву белым цветом.
         canvas.drawColor(Color.WHITE);
+        // Русую систему координат.
         drawCord(canvas);
+        // Генерирую случайные точки.
         for (int i=0;i<200;i++){
             // Использую nextInt вместо nextFloat, это дает лучшее качество чисел и позволяет покрыть весь диапазон.
             float[] dot = {(random.nextInt(1000001)/(float)1000000) * width, (random.nextInt(1000001)/(float)1000000) * width};
+                // Проверяю, лежит точка внутри окружности или вне её, использя стандартное уравнение окружности x^2+y^2=r^2.
                 if ((Math.pow(dot[0], 2) + Math.pow(dot[1], 2)) <= (Math.pow(width, 2))) {
                     dotsIn.add(dot[0]);
                     dotsIn.add(width - dot[1]);
@@ -90,15 +94,19 @@ public class DrawPi {
                 }
         }
         p.setStrokeWidth(stroke);
+        // Точки вне окружности.
         p.setColor(Color.BLUE);
         canvas.drawPoints(toPrimitive(dots), p);
+        // Точки внутри окружности.
         p.setColor(Color.RED);
         canvas.drawPoints(toPrimitive(dotsIn), p);
+        // Значение числа Пи на текущий момент
         p.setTextAlign(Paint.Align.LEFT);
         p.setColor(ContextCompat.getColor(context, R.color.base_gray));
         p.setStrokeWidth(stroke / 2);
         p.setStyle(Paint.Style.FILL_AND_STROKE);
         canvas.drawText(String.format(Locale.ENGLISH, "%.7f", ((float) dotsIn.size() / (dotsIn.size() + dots.size())) * 4)+" - вычисленное значение", margin, width + (2 * margin), p);
+        // Отрисовка индикатора прогресса.
         drawProgress(canvas, dots.size() + dotsIn.size(), dotCount);
         return dotsIn.size() + dots.size() > dotCount;
     }
@@ -111,8 +119,10 @@ public class DrawPi {
         p.setStrokeWidth(stroke);
         p.setStyle(Paint.Style.STROKE);
         p.setColor(ContextCompat.getColor(context, R.color.base_gray));
+        // Квадрат и вписанная дуга.
         canvas.drawRect(rectangle, p);
         canvas.drawArc(arc, 0, -90, false, p);
+        // Украшательства. Оси координат и подписи.
         canvas.drawLine(margin, margin / 2, margin, margin * (float) 1.5 + width, p);
         canvas.drawLine(margin, margin / 2, margin - (2 * stroke), margin / 2 + (8 * stroke), p);
         canvas.drawLine(margin, margin / 2, margin + (2 * stroke), margin / 2 + (8 * stroke), p);
@@ -151,6 +161,7 @@ public class DrawPi {
      * @param whole - общее значение.
      */
     private void drawProgress(Canvas canvas, float current, double whole){
+        // Вычисляю угол сектора.
         float deg = (float)360*(current/(float)whole);
         p.setStyle(Paint.Style.FILL_AND_STROKE);
         p.setColor(ContextCompat.getColor(context, R.color.base_gray));
