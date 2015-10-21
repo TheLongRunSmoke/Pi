@@ -15,7 +15,7 @@ import java.lang.ref.WeakReference;
 
 public class FullscreenActivity extends Activity {
 
-    public static boolean AUTO_HIDE = false;
+    public static boolean AUTO_HIDE = true;
 
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 

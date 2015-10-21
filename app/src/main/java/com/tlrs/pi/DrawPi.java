@@ -6,13 +6,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.TypedArrayUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -69,6 +67,11 @@ public class DrawPi {
 
     /**
      * Отрисовка следующего кадра.
+     *
+     * Точность вычислений можно значительно повысить заменив float на BigDecimals,
+     * но это потребует больше памяти и скажется на скорости работы, хотя позволит
+     * уменьшить количество необходимых точек.
+     *
      * @param canvas - рабочая канва.
      * @return - возвратит true после заполнения массива точек.
      */
@@ -76,7 +79,8 @@ public class DrawPi {
         canvas.drawColor(Color.WHITE);
         drawCord(canvas);
         for (int i=0;i<200;i++){
-            float[] dot = {random.nextFloat() * width, random.nextFloat() * width};
+            // Использую nextInt вместо nextFloat, это дает лучшее качество чисел и позволяет покрыть весь диапазон.
+            float[] dot = {(random.nextInt(1000001)/(float)1000000) * width, (random.nextInt(1000001)/(float)1000000) * width};
                 if ((Math.pow(dot[0], 2) + Math.pow(dot[1], 2)) <= (Math.pow(width, 2))) {
                     dotsIn.add(dot[0]);
                     dotsIn.add(width - dot[1]);
@@ -85,12 +89,16 @@ public class DrawPi {
                     dots.add(width - dot[1]);
                 }
         }
+        p.setStrokeWidth(stroke);
         p.setColor(Color.BLUE);
         canvas.drawPoints(toPrimitive(dots), p);
         p.setColor(Color.RED);
         canvas.drawPoints(toPrimitive(dotsIn), p);
-        canvas.drawText(Float.toString(((float) dotsIn.size() / (dotsIn.size() + dots.size())) * 4), margin, width + (2 * margin), p);
-        canvas.drawText("3.1415926", margin, width+(3*margin), p);
+        p.setTextAlign(Paint.Align.LEFT);
+        p.setColor(ContextCompat.getColor(context, R.color.base_gray));
+        p.setStrokeWidth(stroke / 2);
+        p.setStyle(Paint.Style.FILL_AND_STROKE);
+        canvas.drawText(String.format(Locale.ENGLISH, "%.7f", ((float) dotsIn.size() / (dotsIn.size() + dots.size())) * 4)+" - вычисленное значение", margin, width + (2 * margin), p);
         drawProgress(canvas, dots.size() + dotsIn.size(), dotCount);
         return dotsIn.size() + dots.size() > dotCount;
     }
@@ -104,10 +112,22 @@ public class DrawPi {
         p.setStyle(Paint.Style.STROKE);
         p.setColor(ContextCompat.getColor(context, R.color.base_gray));
         canvas.drawRect(rectangle, p);
-        p.setColor(ContextCompat.getColor(context, R.color.light_gray));
         canvas.drawArc(arc, 0, -90, false, p);
-        p.setTextSize(20);
-        canvas.drawText(Double.toString(dotCount), (float) 10, (float) 30, p);
+        canvas.drawLine(margin, margin / 2, margin, margin * (float) 1.5 + width, p);
+        canvas.drawLine(margin, margin / 2, margin - (2 * stroke), margin / 2 + (8 * stroke), p);
+        canvas.drawLine(margin, margin / 2, margin + (2 * stroke), margin / 2 + (8 * stroke), p);
+        canvas.drawLine(margin / 2, margin + width, margin * (float) 1.5 + width, margin + width, p);
+        canvas.drawLine(margin*(float)1.5 + width, margin + width, margin*(float)1.5+width-(8*stroke), margin+width-(2*stroke), p);
+        canvas.drawLine(margin*(float)1.5 + width, margin + width, margin*(float)1.5+width-(8*stroke), margin+width+(2*stroke), p);
+        p.setTextSize(10 * stroke);
+        p.setTextAlign(Paint.Align.RIGHT);
+        canvas.drawText("X", margin - (5 * stroke), margin / 2 + (5 * stroke), p);
+        canvas.drawText("Y", margin*(float)1.5+width, margin+width+(12*stroke), p);
+        canvas.drawText("0", margin-(5*stroke), margin+width+(12*stroke), p);
+        p.setStrokeWidth(stroke / 2);
+        p.setStyle(Paint.Style.FILL_AND_STROKE);
+        p.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText("3.1415927 - число π", margin, width+(3*margin), p);
     }
 
     /**

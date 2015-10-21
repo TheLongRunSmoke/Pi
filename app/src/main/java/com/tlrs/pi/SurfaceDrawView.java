@@ -36,15 +36,15 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
         handler = new Handler(new Handler.Callback(){
             @Override
             public boolean handleMessage(Message msg) {
-                if (drawThread.isAlive()){
-                    resume();
-                }else{
-                    drawThread = new DrawThread(getHolder());
-                    drawThread.setRunning(true);
-                    drawThread.skipFirstLoop(true);
-                    drawThread.start();
-                }
-                return false;
+                    if (drawThread.isAlive()) {
+                        resume();
+                    } else {
+                        drawThread = new DrawThread(getHolder());
+                        drawThread.setRunning(true);
+                        drawThread.skipFirstLoop(true);
+                        drawThread.start();
+                    }
+                    return false;
             }
         });
     }
@@ -146,7 +146,6 @@ class SurfaceDrawView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                 }
             }
-            FullscreenActivity.AUTO_HIDE = false;
             FullscreenActivity.handler.sendEmptyMessage(0);
         }
 
